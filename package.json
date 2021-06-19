@@ -1,13 +1,13 @@
 {
   "name": "dy-gen",
-  "version": "1.0.0",
+  "version": "1.0.12",
   "private": false,
   "scripts": {
-    "start": "node ./bin/www",
-    "dev": "node-dev ./bin/www"
+    "start": "node index.js",
+    "dev": "node-dev index.js"
   },
   "bin": {
-    "dy-gen": "node ./bin/www"
+    "dy-gen": "index.js"
   },
   "dependencies": {
     "axios": "^0.21.1",
@@ -23,5 +23,16 @@
   },
   "devDependencies": {
     "node-dev": "^6.7.0"
-  }
+  },
+  "description": "diyue code generate(api)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/842377562/dy-gen.git"
+  },
+  "author": "842377562@qq.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/842377562/dy-gen/issues"
+  },
+  "homepage": "https://github.com/842377562/dy-gen#readme"
 }

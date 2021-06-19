@@ -4,7 +4,7 @@ module.exports =
     class Socket {
         objMap = {}
         constructor(server) {
-            this.io = require('socket.io')(server)
+            this.io = require('socket.io')(server, { cors: true })
             this.register()
             this.io.on('connection', (socket) => {
                 socket.on('msg', res => {

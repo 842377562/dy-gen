@@ -96,7 +96,6 @@ function onListening() {
   const projectUrl=`http://localhost:${addr.port}/`
   console.log(`服务启动成功: ${projectUrl}`);
 
-  // TODO
   // Opens the url in the default browser
-  // opn(projectUrl);
+  opn(projectUrl);
 }
