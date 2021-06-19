@@ -72,7 +72,7 @@ module.exports = class {
         }
         this.onMsg({
             status: 200,
-            msg: '全部更新完成!',
+            msg: '更新完成!',
             list: fileList
         })
 

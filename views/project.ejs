@@ -193,6 +193,7 @@
                             type: data.status == 200 ? 'success' : 'error',
                             message: data.msg
                         })
+                        this.sendMsg('dir_getDirTree')
                         break
                 }
             })
