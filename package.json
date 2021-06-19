@@ -1,0 +1,27 @@
+{
+  "name": "dy-gen",
+  "version": "1.0.0",
+  "private": false,
+  "scripts": {
+    "start": "node ./bin/www",
+    "dev": "node-dev ./bin/www"
+  },
+  "bin": {
+    "dy-gen": "node ./bin/www"
+  },
+  "dependencies": {
+    "axios": "^0.21.1",
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "ejs": "~2.6.1",
+    "express": "~4.16.1",
+    "http-errors": "~1.6.3",
+    "morgan": "~1.9.1",
+    "node-sass-middleware": "0.11.0",
+    "opn": "^6.0.0",
+    "socket.io": "^4.0.1"
+  },
+  "devDependencies": {
+    "node-dev": "^6.7.0"
+  }
+}

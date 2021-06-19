@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>
+    <%= title %>
+  </title>
+
+  <link rel="stylesheet" href="stylesheets/reset.css" />
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    /* 常用flex布局 */
+    .flex-box {
+      display: flex;
+    }
+
+    .flex-col {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .flex-items-center {
+      display: flex;
+      align-items: center;
+    }
+
+    .flex-between {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .flex-center {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .flex-around {
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .dirs-wrapper {
+      width: 600px;
+      flex: 1;
+    }
+
+    .dirs-wrapper .dirItem {
+      height: 30px;
+      margin-bottom: 5px;
+      width: 100%;
+      background-color: antiquewhite;
+      line-height: 30px;
+      cursor: pointer;
+      overflow: hidden;
+      /*超出部分隐藏*/
+      white-space: nowrap;
+      /*不换行*/
+      text-overflow: ellipsis;
+      /*超出部分文字以...显示*/
+      box-sizing: border-box;
+      padding: 0 10px;
+    }
+
+    .selected{
+      background-color: aquamarine!important;
+    }
+    .currentDirPathBody{
+      width: 100%;
+      background-color: cornflowerblue;
+      height: 40px;
+      line-height: 40px;
+      padding: 0 10px;
+      color: #fff;
+      border-radius: 4px;
+      box-sizing: border-box;
+      margin: 0 10px;
+    }
+    .dirSelectedBody{
+      height: 100vh;
+    }
+    .selectedBtn{
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app" >
+    <div class="flex-col flex-items-center dirSelectedBody">
+      <div class="flex-items-center" style="width: 600px;padding-bottom: 20px;padding-top: 10px;">
+        <el-button type="primary" icon="el-icon-back" @click="dirBack()"></el-button>
+        <el-input v-model='inputVal' v-show="inputShow"></el-input>
+        <div class="currentDirPathBody" v-show="!inputShow">{{currentDir.currentDirPath}}</div>
+        <el-button :type="inputShow?'success':'primary'" :icon="inputShow?'el-icon-check':'el-icon-edit'" @click="inputShow=!inputShow"></el-button>
+      </div>
+      <ul class="dirs-wrapper">
+        <li class="dirItem" v-for="(item,index) in currentDir.currentChildDirs" :key="index" :title="item"
+          :class="currentDir.currentDirPath+'\\'+item==selectedDirPath?'selected':''"
+          @dblclick="dblclickDir(item)" @click="clickDir(item)">{{ item }}</li>
+      </ul>
+      <el-button class="selectedBtn" type="success" :disabled="selectedDirPath==''" @click="selectedProjectPath">选中项目目录</el-button>
+    </div>
+    
+  </div>
+</body>
+<script type="text/javascript" src="javascripts/a.js"></script>
+<script>
+  const socket = io.connect('http://localhost:8000');
+  // console.log(name())
+  var app = new Vue({
+    el: '#app',
+    data: {
+      currentDir: {},
+      socket: socket,
+      selectedDirPath:"",
+      inputShow:false,
+      inputVal:""
+    },
+    computed:{
+      
+    },
+    methods: {
+      sendMsg(action, data) {
+        this.socket.emit('msg', {
+          action,
+          data
+        })
+      },
+      clickDir(item){
+        let clickDIrPath=this.currentDir.currentDirPath+'\\'+item
+        this.selectedDirPath=clickDIrPath
+      },
+      dblclickDir(item){
+        let path=this.currentDir.currentDirPath+'\\'+item
+        this.sendMsg('dir_changeCurrentDirPath',path)
+      },
+      dirBack(){
+        let backPath=this.currentDir.currentDirPath.split('\\').slice(0,-1).join('\\')
+        this.sendMsg('dir_changeCurrentDirPath',backPath)
+      },
+      selectedProjectPath(){
+        this.sendMsg('dir_setProjectPath',this.selectedDirPath)
+      }
+    },
+    watch:{
+      currentDir(n){
+        this.selectedDirPath=''
+        this.inputShow=false
+      },
+      inputShow(n){
+        if(n){
+          this.inputVal=this.currentDir.currentDirPath
+        }else{
+          this.sendMsg('dir_changeCurrentDirPath',this.inputVal)
+        }
+      }
+    },
+    created() {
+      this.socket.on('response', ({ action, data }) => {
+        switch (action) {
+          case "dir_currentDir":
+            this.currentDir = data
+            break;
+            case "dir_changeCurrentDirPath":
+            this.currentDir = data
+            break;
+            case "dir_setProjectPath":
+            window.location.href="/project"
+            break;
+        }
+      })
+
+      // 错误处理
+      this.socket.on('error', (res) => {
+        console.error(res);
+      })
+
+      this.sendMsg('dir_currentDir')
+    },
+    mounted() {
+
+    }
+  })
+</script>
+
+</html>

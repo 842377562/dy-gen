@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>
+        <%= title %>
+    </title>
+
+    <link rel="stylesheet" href="stylesheets/reset.css" />
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://at.alicdn.com/t/font_2619149_p0gid60ez1d.js"></script>
+    <script type="text/javascript" src="javascripts/tool.js"></script>
+
+    <style>
+        /* 常用flex布局 */
+        .flex-box {
+            display: flex;
+        }
+
+        .flex-col {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .flex-items-center {
+            display: flex;
+            align-items: center;
+        }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .flex-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .flex-around {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .dirs-wrapper {
+            width: 600px;
+            flex: 1;
+        }
+
+        #app {
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .custom-tree-node {
+            width: 100%;
+            font-size: 16px;
+        }
+
+        .el-tree {
+            min-width: 300px;
+            max-width: 100%;
+        }
+
+        .icon {
+            width: 1em;
+            height: 1em;
+            vertical-align: -0.15em;
+            fill: currentColor;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" class="flex-col flex-items-center">
+        <div class="dirs-wrapper flex-col flex-items-center">
+            <h3 style="line-height: 30px;">更新接口</h3>
+            <el-form ref="form" :model="form" label-width="120px" style="width: 100%;margin-top: 20px;">
+                <el-form-item label="服务器地址">
+                    <el-input placeholder="请输入服务器地址http://localhost:8000" v-model="form.baseUrl" clearable>
+                        <el-button slot="append" icon="el-icon-refresh" @click="upDateApi">更新</el-button>
+                    </el-input>
+                </el-form-item>
+            </el-form>
+            <el-tree class="el-tree" :data="treeData" ref="tree" show-checkbox
+                :props="{children: 'children', label: 'name'}" node-key="path" check-strictly>
+                <span class="custom-tree-node" slot-scope="{ node, data }">
+                    <svg class="icon" aria-hidden="true">
+                        <use :xlink:href="getIconByType(data)"></use>
+                    </svg>
+                    <span>{{ node.label }}</span>
+                    <el-tooltip class="item" effect="dark" :content="'上次更新时间:'+data.createDate" placement="right">
+                        <span style="font-size: 12px;color: mediumorchid;">
+                            {{data.createDate}}
+                        </span>
+                    </el-tooltip>
+                </span>
+            </el-tree>
+        </div>
+    </div>
+</body>
+
+<script>
+    const socket = io.connect('http://localhost:8000');
+    var app = new Vue({
+        el: '#app',
+        data: {
+            currentDir: {},
+            socket: socket,
+            form: { baseUrl: '' },
+            treeData: [],
+        },
+        computed: {
+
+        },
+        methods: {
+            sendMsg(action, data) {
+                this.socket.emit('msg', {
+                    action,
+                    data
+                })
+            },
+            getIconByType(data) {
+                if (!data.isFile) {
+                    return "#icon-wenjianjia"
+                } else if (data.name.endsWith('.vue')) {
+                    return "#icon-vue"
+                } else if (data.name.endsWith('.js')) {
+                    return "#icon-js"
+                } else if (data.name.endsWith('.css')) {
+                    return "#icon-css"
+                } else if (data.name.endsWith('.png')) {
+                    return "#icon-png"
+                } else if (data.name.endsWith('.html')) {
+                    return "#icon-html"
+                } else if (data.name.endsWith('.jpg')) {
+                    return "#icon-jpg"
+                } else if (data.name.endsWith('.gif')) {
+                    return "#icon-gif"
+                } else if (data.name.endsWith('.zif')) {
+                    return "#icon-zip"
+                }
+            }
+            , upDateApi() {
+                let arr = this.$refs.tree.getCheckedNodes()
+                let baseUrl = this.form.baseUrl
+                if (arr.length) {
+                    this.$confirm(`选中了${arr.length}个API文件，是否更新?`, '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                    }).then(() => {
+                        if (!baseUrl) {
+                            this.$message.error('请输入服务器地址!')
+                        }
+                        if (baseUrl[baseUrl.length - 1] === '/') {//去除最后一个多余的 /
+                            baseUrl = baseUrl.substring(0, baseUrl.length - 1);
+                        }
+                        localData('set', 'baseUrl', baseUrl)
+                        let data = {
+                            fileList: arr,
+                            baseUrl
+                        }
+                        this.sendMsg('dir_upDateApiFile', data)
+                    })
+                } else {
+                    this.$message.warning('请选择要更新的文件!')
+                }
+            }
+        },
+        watch: {
+
+        },
+        created() {
+            let baseUrl = localData('get', 'baseUrl')
+            if (baseUrl) {
+                this.form.baseUrl = baseUrl
+            }
+            this.socket.on('response', ({ action, data }) => {
+                switch (action) {
+                    case "dir_currentDir":
+                        this.currentDir = data
+                        break;
+                    case "dir_getDirTree":
+                        this.treeData = data
+                        break;
+                    case "onMsg":
+                        this.$message({
+                            type: data.status == 200 ? 'success' : 'error',
+                            message: data.msg
+                        })
+                        break
+                }
+            })
+
+            // 错误处理
+            this.socket.on('error', (res) => {
+                console.error(res);
+            })
+
+            this.sendMsg('dir_currentDir')
+            this.sendMsg('dir_getDirTree')
+
+        },
+        mounted() {
+
+        }
+    })
+</script>
+
+</html>
